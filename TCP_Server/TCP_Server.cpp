@@ -125,6 +125,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 		ZeroMemory(buf, sizeof(buf));
 		// 데이터 받기
 		retval = recv(client_socket, buf, sizeof(buf), 0);
+		Packet* recv_packet = (Packet*)buf;
 		if (SOCKET_ERROR == retval) break;
 		else if (0 == retval) break;
 
@@ -132,12 +133,12 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 		buf[retval - 1] = '\0';
 		printf("\n[TCP/%s:%d] %s\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port), buf);
 
-
+		Packet send_packet = *recv_packet;
 		// 데이터 보내기
 		WaitForSingleObject(g_hMutex, INFINITE);
 		for (const auto& sock : ClientList)
 		{
-			retval = send(sock, buf, retval, 0);
+			retval = send(sock, (char*)&send_packet, sizeof(Packet), 0);
 			if (SOCKET_ERROR == retval) break;
 		}
 		ReleaseMutex(g_hMutex);
