@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #define MAX_BUFFER_SIZE 2048
+#define MAX_NAME_SIZE 256
 
 void err_quit(const char* msg);
 DWORD WINAPI ProcessClient(LPVOID arg);
@@ -17,7 +18,8 @@ std::vector<SOCKET> ClientList;
 #pragma pack(1)
 struct Packet
 {
-	char buf[256];
+	char name[MAX_NAME_SIZE];
+	char buf[MAX_BUFFER_SIZE];
 };
 #pragma pack()
 
@@ -118,7 +120,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 	int addrlen = sizeof(clientaddr);
 	getpeername(client_socket, (SOCKADDR*)&clientaddr, &addrlen);
 	int retval;
-	char buf[MAX_BUFFER_SIZE + 1];
+	char buf[sizeof(Packet)];
 
 	while (1)
 	{
@@ -130,8 +132,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 		else if (0 == retval) break;
 
 		// 받은 데이터 출력
-		buf[retval - 1] = '\0';
-		printf("\n[TCP/%s:%d] %s\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port), buf);
+		printf("\n[TCP/%s:%d] %s\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port), recv_packet->buf);
 
 		Packet send_packet = *recv_packet;
 		// 데이터 보내기
